@@ -13,27 +13,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu, macos, windows ]
-        # Use various version syntax here for testing
-        ruby: [ 2.2, 2.3, 2.4, 2.5, 2.6.6, 2.7, ruby-head, debug, jruby-9.1, jruby, jruby-head, truffleruby, truffleruby-head ]
-        include:
-        - { os: ubuntu, ruby: rubinius }
-        - { os: windows, ruby: mingw }
-        - { os: windows, ruby: mswin }
-        exclude:
-        - { os: windows, ruby: debug }
-        - { os: windows, ruby: truffleruby }
-        - { os: windows, ruby: truffleruby-head }
+        os: [ windows ]
+        ruby: [ 2.6.6 ]
 
     name: ${{ matrix.os }} ${{ matrix.ruby }}
     runs-on: ${{ matrix.os }}-latest
     steps:
+    - run: echo $PATH
+      shell: bash
+    - run: echo $Env:Path
+    - run: where.exe 7z
+    - run: which 7z
+      shell: bash
+
+    - run: ls C:\
+
     - uses: actions/checkout@v2
 
     - uses: ./
       with:
         ruby-version: ${{ matrix.ruby }}
     - run: ruby -v
+
+    - run: echo $PATH
+      shell: bash
+    - run: echo $Env:Path
+    - run: where.exe 7z
+    - run: which 7z
+      shell: bash
 
     - name: build compiler
       run: |
@@ -78,12 +85,3 @@ jobs:
           else { echo "Can't find $e" }
           echo ''
         }
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - run: yarn install
-    - run: yarn run package
-    - name: Check generated files are up to date
-      run: git diff --exit-code
