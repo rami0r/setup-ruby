@@ -1,5 +1,6 @@
 const os = require('os')
 const fs = require('fs')
+const path = require('path')
 const core = require('@actions/core')
 const { performance } = require('perf_hooks')
 
@@ -51,3 +52,50 @@ export function win2nix(path) {
   }
   return path.replace(/\\/g, '/').replace(/ /g, '\\ ')
 }
+
+class CmdCls {
+  constructor() {
+    this.varis = []
+    this.paths = []
+    this.os_path = os.platform() === 'win32' ? 'Path' : 'PATH'
+    this.ENV = process.env
+  }
+  
+  addVari(k,v) {
+    this.varis.push([k,v])
+    //this.ENV[k] = v
+  }
+  
+  addPath(item) {
+    this.paths.unshift(item)
+    this.ENV[this.os_path] = `${item}${path.delimiter}${this.ENV[this.os_path]}`
+  }
+
+  cmdVaris() {
+    let cmdStr = ''
+    const iterator = this.varis.values()
+    for (const kv of iterator) {
+      cmdStr = cmdStr.concat(`::set-env name=${kv[0]}::${kv[1]}${os.EOL}`)
+    }
+    return cmdStr
+  }
+  
+  sendVaris() {
+    const cmdStr = this.cmdVaris()
+    process.stdout.write(cmdStr)
+  }
+  
+  sendPath() {
+    const os_path = this.os_path
+    process.stdout.write(`::set-env name=${os_path}::${this.ENV[os_path]}${os.EOL}`)
+  }
+  
+  sendAll() {
+    const os_path = this.os_path
+    let cmdStr = this.cmdVaris()
+    cmdStr = cmdStr.concat(`::set-env name=${os_path}::${this.ENV[os_path]}${os.EOL}`)
+    process.stdout.write(cmdStr)
+  }
+}
+
+export const cmd = new CmdCls
